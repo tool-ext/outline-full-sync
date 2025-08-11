@@ -1,3 +1,4 @@
 inc/config.ini
 .cursorindexingignore
-.specstory/history/2025-08-11_19-00Z-move-settings-to-config-ini.md
+.specstory/
+.specstory/** */
