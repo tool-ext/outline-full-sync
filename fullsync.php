@@ -16,11 +16,11 @@ Usage: php fullsync.php
 
 // Include required components
 if (!function_exists('sendHttpRequest')) {
-    require_once __DIR__ . '/inc/init.php';
+    require_once __DIR__ . '/init/init.php';
 }
-require_once __DIR__ . '/fullsync/FileSystemScanner.php';
-require_once __DIR__ . '/fullsync/RemoteSync.php';
-require_once __DIR__ . '/fullsync/FileOperations.php';
+require_once __DIR__ . '/inc/FileSystemScanner.php';
+require_once __DIR__ . '/inc/RemoteSync.php';
+require_once __DIR__ . '/inc/FileOperations.php';
 
 class FullSync {
     private $config;
@@ -148,6 +148,31 @@ class FullSync {
             }
         }
         
+        // Additional conflict detection: check if any modified local files have newer remote versions
+        foreach ($localChanges['modified_files'] as $modifiedFile) {
+            if ($modifiedFile['has_outline_id'] && !empty($modifiedFile['outline_id']) && $modifiedFile['outline_id'] !== 'null') {
+                foreach ($remoteChanges['updated_documents'] as $remoteDoc) {
+                    if ($remoteDoc['id'] === $modifiedFile['outline_id']) {
+                        $localModified = $modifiedFile['modified_time'];
+                        $remoteModified = strtotime($remoteDoc['updatedAt']);
+                        
+                        // If both were modified and timestamps are close (within 5 minutes), it's a potential conflict
+                        if (abs($localModified - $remoteModified) < 300) { // 5 minutes = 300 seconds
+                            $conflicts[] = [
+                                'type' => 'simultaneous_edit',
+                                'path' => $modifiedFile['path'],
+                                'outline_id' => $modifiedFile['outline_id'],
+                                'local_modified' => $localModified,
+                                'remote_modified' => $remoteModified,
+                                'local_data' => $modifiedFile,
+                                'remote_data' => $remoteDoc
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+        
         if (empty($conflicts)) {
             echo "✅ No conflicts detected\n";
         } else {
@@ -169,7 +194,22 @@ class FullSync {
             echo "  File: {$conflict['path']}\n";
             echo "  Local modified: " . date('Y-m-d H:i:s', $conflict['local_modified']) . "\n";
             echo "  Remote modified: " . date('Y-m-d H:i:s', $conflict['remote_modified']) . "\n";
-            echo "  Outline ID: {$conflict['outline_id']}\n\n";
+            echo "  Outline ID: {$conflict['outline_id']}\n";
+            
+            // Suggest resolution based on timestamps
+            $timeDiff = abs($conflict['local_modified'] - $conflict['remote_modified']);
+            if ($timeDiff > 300) { // More than 5 minutes difference
+                if ($conflict['local_modified'] > $conflict['remote_modified']) {
+                    echo "  💡 Suggestion: Local file appears to be newer (by " . round($timeDiff/60, 1) . " minutes)\n";
+                    echo "     Consider keeping local version\n";
+                } else {
+                    echo "  💡 Suggestion: Remote document appears to be newer (by " . round($timeDiff/60, 1) . " minutes)\n";
+                    echo "     Consider keeping remote version\n";
+                }
+            } else {
+                echo "  ⚠️  Timestamps are very close - manual review recommended\n";
+            }
+            echo "\n";
         }
         
         echo "Please resolve these conflicts manually and run the sync again.\n";
@@ -195,6 +235,24 @@ class FullSync {
         // Update remote documents from modified local files
         foreach ($localChanges['modified_files'] as $modifiedFile) {
             if ($modifiedFile['has_outline_id'] && !empty($modifiedFile['outline_id']) && $modifiedFile['outline_id'] !== 'null') {
+                // Check if remote document is newer before overwriting
+                $remoteDoc = $this->findRemoteDocumentById($modifiedFile['outline_id']);
+                if ($remoteDoc) {
+                    $localModified = $modifiedFile['modified_time'];
+                    $remoteModified = strtotime($remoteDoc['updatedAt']);
+                    
+                    echo "🔍 Comparing timestamps for {$modifiedFile['path']}:\n";
+                    echo "   Local: " . date('Y-m-d H:i:s', $localModified) . "\n";
+                    echo "   Remote: " . date('Y-m-d H:i:s', $remoteModified) . "\n";
+                    
+                    if ($remoteModified > $localModified) {
+                        echo "⚠️  Skipping local update for {$modifiedFile['path']} - remote document is newer\n";
+                        continue;
+                    } else {
+                        echo "✅ Local file is newer, proceeding with update\n";
+                    }
+                }
+                
                 $this->updateRemoteDocument($modifiedFile);
             } else {
                 echo "⚠️  Skipping update for file with invalid outline ID: {$modifiedFile['path']}\n";
@@ -230,6 +288,24 @@ class FullSync {
         
         // Update local files from modified remote documents
         foreach ($remoteChanges['updated_documents'] as $updatedDoc) {
+            // Check if local file is newer before overwriting
+            $localFile = $this->findLocalFileByOutlineId($updatedDoc['id']);
+            if ($localFile) {
+                $localModified = $localFile['modified_time'];
+                $remoteModified = strtotime($updatedDoc['updatedAt']);
+                
+                echo "🔍 Comparing timestamps for {$updatedDoc['title']}:\n";
+                echo "   Local: " . date('Y-m-d H:i:s', $localModified) . "\n";
+                echo "   Remote: " . date('Y-m-d H:i:s', $remoteModified) . "\n";
+                
+                if ($localModified > $remoteModified) {
+                    echo "⚠️  Skipping remote update for {$updatedDoc['title']} - local file is newer\n";
+                    continue;
+                } else {
+                    echo "✅ Remote document is newer, proceeding with update\n";
+                }
+            }
+            
             $this->updateLocalFile($updatedDoc, $hierarchy);
         }
         
@@ -461,6 +537,19 @@ class FullSync {
             }
         }
         
+        return null;
+    }
+
+    /**
+     * Find remote document by ID
+     */
+    private function findRemoteDocumentById($outlineId) {
+        $remoteDocuments = $this->remoteSync->fetchAllDocuments();
+        foreach ($remoteDocuments as $doc) {
+            if ($doc['id'] === $outlineId) {
+                return $doc;
+            }
+        }
         return null;
     }
     
