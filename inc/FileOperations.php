@@ -39,9 +39,9 @@ class FileOperations {
         // Handle duplicate filenames
         $fullPath = $this->getUniqueFilepath($fullPath);
         
-        // Create frontmatter
+        // Create frontmatter - use short ID if available, fallback to long ID
         $frontmatter = [
-            'id_outline' => $document['id']
+            'id_outline' => $document['urlId'] ?? $document['id']
         ];
         
         // Create content
@@ -61,7 +61,7 @@ class FileOperations {
     /**
      * Update existing markdown file content and timestamps
      */
-    public function updateMarkdownFile($filePath, $document) {
+    public function updateMarkdownFile($filePath, $document, $updateContentFromRemote = false) {
         if (!file_exists($filePath)) {
             throw new Exception("File does not exist: $filePath");
         }
@@ -75,23 +75,24 @@ class FileOperations {
             $existingFrontmatter = [];
         }
         
-        // Update frontmatter with new document ID
-        $existingFrontmatter['id_outline'] = $document['id'];
+        // ONLY update the id_outline field, preserve all other frontmatter
+        $existingFrontmatter['id_outline'] = $document['urlId'] ?? $document['id'];
         
         // Extract existing content (without frontmatter)
         $bodyContent = $this->extractContentFromFile($filePath);
         
-        // If we're updating from remote, use remote content, otherwise keep local content
-        // Special case: if this is a new document creation (adding ID to existing file), keep local content
-        if (!empty($bodyContent)) {
-            // We have local content - preserve it unless we're explicitly updating from remote
-            $finalContent = $bodyContent;
-        } else {
-            // No local content - use remote content
+        // Determine final content based on update type
+        if ($updateContentFromRemote) {
+            // This is a remote content update - use remote content for body
             $finalContent = $document['text'] ?? '';
+            echo "  🔄 Updating body content from remote\n";
+        } else {
+            // This is just an ID update or file management - preserve local content
+            $finalContent = $bodyContent ?: ($document['text'] ?? '');
+            echo "  📝 Preserving local content, updating frontmatter only\n";
         }
         
-        // Create new content with frontmatter
+        // Create new content with preserved frontmatter
         $newContent = $this->buildMarkdownContent($existingFrontmatter, $finalContent);
         
         // Write updated content
@@ -100,7 +101,7 @@ class FileOperations {
         // Update timestamps
         $this->setFileTimestamps($filePath, $document);
         
-        echo "  📝 Updated: " . str_replace($this->baseFolder . '/', '', $filePath) . "\n";
+        echo "  ✅ Updated: " . str_replace($this->baseFolder . '/', '', $filePath) . "\n";
     }
     
     /**
@@ -275,7 +276,13 @@ class FileOperations {
     private function buildMarkdownContent($frontmatter, $text) {
         $content = "---\n";
         foreach ($frontmatter as $key => $value) {
-            $content .= "$key: " . json_encode($value) . "\n";
+            // For simple string values, don't use quotes
+            if (is_string($value) && !empty($value)) {
+                $content .= "$key: $value\n";
+            } else {
+                // For complex values (arrays, objects, null), use json_encode
+                $content .= "$key: " . json_encode($value) . "\n";
+            }
         }
         $content .= "---\n\n";
         $content .= $this->cleanText($text);

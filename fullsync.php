@@ -289,7 +289,7 @@ class FullSync {
         // Update local files from modified remote documents
         foreach ($remoteChanges['updated_documents'] as $updatedDoc) {
             // Check if local file is newer before overwriting
-            $localFile = $this->findLocalFileByOutlineId($updatedDoc['id']);
+            $localFile = $this->findLocalFileByDocument($updatedDoc);
             if ($localFile) {
                 $localModified = $localFile['modified_time'];
                 $remoteModified = strtotime($updatedDoc['updatedAt']);
@@ -411,8 +411,8 @@ class FullSync {
      * Update local file from remote document
      */
     private function updateLocalFile($document, $hierarchy) {
-        // Find existing local file by Outline ID
-        $localFile = $this->findLocalFileByOutlineId($document['id']);
+        // Find existing local file by document (tries both long and short IDs)
+        $localFile = $this->findLocalFileByDocument($document);
         
         if ($localFile) {
             $newLocalPath = $this->remoteSync->generateLocalPath($document, $hierarchy);
@@ -423,7 +423,7 @@ class FullSync {
                 echo "🚚 Moving local file: $currentPath → $newLocalPath\n";
                 try {
                     $this->fileOps->moveFile($localFile['full_path'], $newLocalPath);
-                    $this->fileOps->updateMarkdownFile($this->baseFolder . '/' . $newLocalPath, $document);
+                    $this->fileOps->updateMarkdownFile($this->baseFolder . '/' . $newLocalPath, $document, true);
                 } catch (Exception $e) {
                     echo "  ❌ Failed to move local file: " . $e->getMessage() . "\n";
                 }
@@ -431,7 +431,7 @@ class FullSync {
                 // Just update content
                 echo "📝 Updating local file: $currentPath\n";
                 try {
-                    $this->fileOps->updateMarkdownFile($localFile['full_path'], $document);
+                    $this->fileOps->updateMarkdownFile($localFile['full_path'], $document, true);
                 } catch (Exception $e) {
                     echo "  ❌ Failed to update local file: " . $e->getMessage() . "\n";
                 }
@@ -466,6 +466,7 @@ class FullSync {
             $localPath = $this->remoteSync->generateLocalPath($doc, $hierarchy);
             $documentMapping[] = [
                 'id' => $doc['id'],
+                'short_id' => $doc['urlId'] ?? null,
                 'title' => $doc['title'],
                 'parent_id' => $doc['parentDocumentId'],
                 'updated_at' => $doc['updatedAt'],
@@ -526,13 +527,33 @@ class FullSync {
     }
     
     /**
-     * Find local file by Outline ID
+     * Find local file by Outline ID (supports both long and short IDs)
      */
     private function findLocalFileByOutlineId($outlineId) {
         $scan = $this->fileScanner->scanFileSystem();
         
         foreach ($scan as $file) {
             if ($file['outline_id'] === $outlineId) {
+                return $file;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Find local file by document (tries both long and short IDs)
+     */
+    private function findLocalFileByDocument($document) {
+        $scan = $this->fileScanner->scanFileSystem();
+        
+        foreach ($scan as $file) {
+            // First try to match with the long ID
+            if ($file['outline_id'] === $document['id']) {
+                return $file;
+            }
+            // Then try to match with the short ID
+            if (isset($document['urlId']) && $file['outline_id'] === $document['urlId']) {
                 return $file;
             }
         }
