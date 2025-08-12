@@ -152,20 +152,6 @@ class FileSystemScanner {
                 // Check if modified
                 $previousFile = $previousFiles[$path];
                 if ($fileData['modified_time'] > $previousFile['modified_time']) {
-                    // Check for conflicts
-                    $lastSync = $previousMetadata['last_sync'] ?? 0;
-                    $lastSyncTime = is_string($lastSync) ? strtotime($lastSync) : $lastSync;
-                    
-                    if ($fileData['modified_time'] > $lastSyncTime) {
-                        // File was modified after last sync - potential conflict
-                        $changes['conflicts'][] = [
-                            'path' => $path,
-                            'local_modified' => $fileData['modified_time'],
-                            'last_sync' => $lastSyncTime,
-                            'file_data' => $fileData
-                        ];
-                    }
-                    
                     $changes['modified_files'][] = $fileData;
                 }
             }
@@ -242,7 +228,7 @@ class FileSystemScanner {
      * Print summary of detected changes
      */
     public function printChangesSummary($changes) {
-        echo "\n📊 Local Filesystem Changes Summary:\n";
+        echo "\n📂 Local Changes:\n";
         echo "- New files: " . count($changes['new_files']) . "\n";
         echo "- Modified files: " . count($changes['modified_files']) . "\n";
         echo "- Moved files: " . count($changes['moved_files']) . "\n";

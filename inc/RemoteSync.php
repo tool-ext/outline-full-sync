@@ -324,7 +324,7 @@ class RemoteSync {
      * Print summary of remote changes
      */
     public function printRemoteChangesSummary($changes) {
-        echo "\n📊 Remote Changes Summary:\n";
+        echo "\n🌐 Remote Changes:\n";
         echo "- New documents: " . count($changes['new_documents']) . "\n";
         echo "- Updated documents: " . count($changes['updated_documents']) . "\n";
         echo "- Deleted documents: " . count($changes['deleted_documents']) . "\n\n";
