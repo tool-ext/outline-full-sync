@@ -66,7 +66,6 @@ class FileSystemScanner {
         
         return [
             'path' => $relativePath,
-            'full_path' => $fullPath,
             'outline_id' => $outlineId,
             'size' => $stat['size'],
             'created_time' => $stat['ctime'],

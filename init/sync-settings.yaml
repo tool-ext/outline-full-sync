@@ -1,0 +1,42 @@
+# Outline Collection Sync Settings
+# ================================
+# This file maps Outline collection IDs to local folder paths
+# 
+# Format:
+# collections:
+#   collection-id-here:
+#     name: "Human readable name"
+#     local_path: "/path/to/local/folder"
+
+collections:
+  d6e02bc5-cb39-4bd3-8df7-13e022201bee:
+    name: "WP"
+    local_path: "/Users/Reess/Desktop/WP"
+    
+  dc7aa491-9910-499d-b886-03f93e60f196:
+    name: "New"
+    local_path: "/Users/Reess/Desktop/New"
+    
+  02409d6d-64a4-4705-a2ae-37303c824ff2:
+    name: "Mom"
+    local_path: "/Users/Reess/Desktop/Mom"
+    
+  2ba54d09-8cad-4e8b-98a6-2e884b739dc5:
+    name: "Projects"
+    local_path: "/Users/Reess/Desktop/Projects"
+    
+  00a4a2d0-3dc2-4098-8e4a-2d6cca87d4a5:
+    name: "KMS"
+    local_path: "/Users/Reess/Desktop/NewOne"
+    
+  c42c1931-77d2-4046-ba02-fae910e8caaf:
+    name: "Work"
+    local_path: "/Users/Reess/Desktop/Work"
+    
+  231951ad-392f-4fa6-a20d-d0afacf1bdcf:
+    name: "PMS"
+    local_path: "/Users/Reess/Desktop/PMS"
+    
+  5d137d43-f5f4-402b-bd29-e1f46350894a:
+    name: "Notes"
+    local_path: "/Users/Reess/Desktop/Notes"

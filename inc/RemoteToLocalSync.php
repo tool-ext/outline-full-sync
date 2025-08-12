@@ -114,7 +114,7 @@ class RemoteToLocalSync {
                 // File needs to be moved
                 echo "🚚 Moving local file: $currentPath → $newLocalPath\n";
                 try {
-                    $this->fileOps->moveFile($localFile['full_path'], $newLocalPath);
+                    $this->fileOps->moveFile($this->baseFolder . '/' . $localFile['path'], $newLocalPath);
                     $this->fileOps->updateMarkdownFile($this->baseFolder . '/' . $newLocalPath, $document, true);
                 } catch (Exception $e) {
                     echo "  ❌ Failed to move local file: " . $e->getMessage() . "\n";
@@ -123,7 +123,7 @@ class RemoteToLocalSync {
                 // Just update content
                 echo "📝 Updating local file: $currentPath\n";
                 try {
-                    $this->fileOps->updateMarkdownFile($localFile['full_path'], $document, true);
+                    $this->fileOps->updateMarkdownFile($this->baseFolder . '/' . $localFile['path'], $document, true);
                 } catch (Exception $e) {
                     echo "  ❌ Failed to update local file: " . $e->getMessage() . "\n";
                 }

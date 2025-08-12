@@ -20,6 +20,7 @@ require_once __DIR__ . '/RemoteSync.php';
 require_once __DIR__ . '/FileOperations.php';
 
 // Include specialized sync components
+require_once __DIR__ . '/CollectionSelector.php';
 require_once __DIR__ . '/ConflictDetector.php';
 require_once __DIR__ . '/LocalToRemoteSync.php';
 require_once __DIR__ . '/RemoteToLocalSync.php';
@@ -32,6 +33,7 @@ class SyncOrchestrator {
     private $remoteSync;
     private $fileOps;
     private $baseFolder;
+    private $collectionId;
     
     // Specialized components
     private $conflictDetector;
@@ -40,9 +42,17 @@ class SyncOrchestrator {
     private $parentConversionHandler;
     private $metadataManager;
     
-    public function __construct() {
-        global $syncConfig;
-        $this->baseFolder = $syncConfig['base_folder'];
+    public function __construct($collectionId = null, $baseFolder = null) {
+        if ($collectionId && $baseFolder) {
+            // Use provided parameters (multi-collection mode)
+            $this->collectionId = $collectionId;
+            $this->baseFolder = $baseFolder;
+        } else {
+            // Use global config (legacy mode)
+            global $syncConfig;
+            $this->baseFolder = $syncConfig['base_folder'];
+            $this->collectionId = $syncConfig['collection_id'];
+        }
         $this->loadConfig();
         $this->initializeComponents();
     }
@@ -135,12 +145,12 @@ class SyncOrchestrator {
      */
     private function loadConfig() {
         // Use the same config as other scripts
-        global $baseUrl, $headers, $syncConfig;
+        global $baseUrl, $headers;
         
         $this->config = [
             'base_url' => $baseUrl,
             'headers' => $headers,
-            'collection_id' => $syncConfig['collection_id']
+            'collection_id' => $this->collectionId
         ];
     }
     

@@ -85,7 +85,7 @@ class ParentConversionHandler {
      * Convert a standalone document file to a parent folder with README.md
      */
     private function convertToParentFolder($localFile, $document, $hierarchy) {
-        $oldFilePath = $localFile['full_path'];
+        $oldFilePath = $this->baseFolder . '/' . $localFile['path'];
         $title = $this->fileOps->extractTitleFromPath($oldFilePath);
         
         echo "🔄 Converting to parent folder: $title\n";
@@ -126,7 +126,7 @@ class ParentConversionHandler {
      * (README.md in folder → standalone .md file)
      */
     private function convertToStandaloneFile($readmeFile, $document) {
-        $readmeFilePath = $readmeFile['full_path'];
+        $readmeFilePath = $this->baseFolder . '/' . $readmeFile['path'];
         $folderPath = dirname($readmeFilePath);
         $folderName = basename($folderPath);
         

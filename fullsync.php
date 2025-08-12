@@ -30,6 +30,24 @@ require_once __DIR__ . '/inc/SyncOrchestrator.php';
 
 // Execute the sync if this file is run directly
 if (basename(__FILE__) === basename($_SERVER['PHP_SELF'])) {
-    $sync = new SyncOrchestrator();
+    echo "🔄 Outline Full Sync - Multi-Collection Support\n";
+    echo "═══════════════════════════════════════════════════\n\n";
+    
+    // Initialize collection selector
+    global $baseUrl, $headers;
+    $selector = new CollectionSelector($baseUrl, $headers);
+    
+    // Let user select collection and get settings
+    $selection = $selector->selectCollection();
+    
+    $collectionId = $selection['collection']['id'];
+    $collectionName = $selection['collection']['name'];
+    $localPath = $selection['settings']['local_path'];
+    
+    echo "🚀 Starting sync for: {$collectionName}\n";
+    echo "═══════════════════════════════════════════════════\n\n";
+    
+    // Start sync with selected collection and path
+    $sync = new SyncOrchestrator($collectionId, $localPath);
     $sync->execute();
 }

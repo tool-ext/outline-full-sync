@@ -83,11 +83,11 @@ class LocalToRemoteSync {
      * Create new document in Outline from local file
      */
     private function createRemoteDocument($localFile, $hierarchy) {
-        $title = $this->fileOps->extractTitleFromPath($localFile['full_path']);
-        $content = $this->fileOps->extractContentFromFile($localFile['full_path']);
+        $title = $this->fileOps->extractTitleFromPath($this->baseFolder . '/' . $localFile['path']);
+        $content = $this->fileOps->extractContentFromFile($this->baseFolder . '/' . $localFile['path']);
         
         // Determine parent ID based on file location and existing .outline metadata
-        $parentId = $this->determineParentFromFileLocation($localFile['full_path']);
+        $parentId = $this->determineParentFromFileLocation($this->baseFolder . '/' . $localFile['path']);
         
         if ($parentId) {
             echo "📝 Creating remote document: $title (parent: $parentId)\n";
@@ -101,7 +101,7 @@ class LocalToRemoteSync {
             echo "  ✅ Created in Outline with ID: {$newDoc['id']}\n";
             
             // Update local file with new Outline ID
-            $this->fileOps->updateMarkdownFile($localFile['full_path'], $newDoc);
+            $this->fileOps->updateMarkdownFile($this->baseFolder . '/' . $localFile['path'], $newDoc);
             
             echo "  📝 Added outline ID to local file frontmatter\n";
             
@@ -114,8 +114,8 @@ class LocalToRemoteSync {
      * Update remote document from local file changes
      */
     private function updateRemoteDocument($localFile) {
-        $title = $this->fileOps->extractTitleFromPath($localFile['full_path']);
-        $content = $this->fileOps->extractContentFromFile($localFile['full_path']);
+        $title = $this->fileOps->extractTitleFromPath($this->baseFolder . '/' . $localFile['path']);
+        $content = $this->fileOps->extractContentFromFile($this->baseFolder . '/' . $localFile['path']);
         
         echo "✏️  Updating remote document: {$localFile['outline_id']}\n";
         
@@ -130,7 +130,7 @@ class LocalToRemoteSync {
      * Update remote document parent relationship from local file move
      */
     private function updateRemoteDocumentParent($movedFile, $hierarchy) {
-        $newParentId = $this->fileOps->determineParentFromPath($movedFile['file_data']['full_path'], $hierarchy);
+        $newParentId = $this->fileOps->determineParentFromPath($this->baseFolder . '/' . $movedFile['file_data']['path'], $hierarchy);
         
         echo "🚚 Updating remote document parent: {$movedFile['outline_id']}\n";
         

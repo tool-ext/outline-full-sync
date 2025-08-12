@@ -25,6 +25,30 @@ class RemoteSync {
     }
     
     /**
+     * Fetch all collections from Outline API
+     */
+    public function fetchAllCollections() {
+        $endpointUrl = $this->baseUrl . "/api/collections.list";
+        
+        if (!function_exists('sendHttpRequest')) {
+            throw new Exception('sendHttpRequest function not available. Please include init.php');
+        }
+        
+        // Collections API expects an empty object, not an empty array
+        $response = sendHttpRequest('POST', $endpointUrl, (object)[], $this->headers);
+        
+        // Check response structure similar to documents API
+        if (!isset($response['data']['data'])) {
+            if (isset($response['data']['ok']) && !$response['data']['ok']) {
+                throw new Exception('API Error: ' . ($response['data']['message'] ?? 'Unknown error'));
+            }
+            throw new Exception('Invalid collections API response structure');
+        }
+        
+        return $response['data']['data'];
+    }
+    
+    /**
      * Fetch all documents from Outline API
      */
     public function fetchAllDocuments() {
