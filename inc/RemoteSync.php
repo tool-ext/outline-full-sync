@@ -37,15 +37,19 @@ class RemoteSync {
         // Collections API expects an empty object, not an empty array
         $response = sendHttpRequest('POST', $endpointUrl, (object)[], $this->headers);
         
-        // Check response structure similar to documents API
-        if (!isset($response['data']['data'])) {
-            if (isset($response['data']['ok']) && !$response['data']['ok']) {
-                throw new Exception('API Error: ' . ($response['data']['message'] ?? 'Unknown error'));
-            }
+        // Check response structure
+        if (!isset($response['data'])) {
             throw new Exception('Invalid collections API response structure');
         }
         
-        return $response['data']['data'];
+        // Handle Outline API response format
+        if (isset($response['data']['data'])) {
+            return $response['data']['data'];
+        } elseif (isset($response['data']['ok']) && !$response['data']['ok']) {
+            throw new Exception('API Error: ' . ($response['data']['message'] ?? 'Unknown error'));
+        } else {
+            return $response['data'];
+        }
     }
     
     /**
@@ -69,13 +73,21 @@ class RemoteSync {
         
         $response = sendHttpRequest('POST', $endpointUrl, $data, $this->headers);
         
-        if (!isset($response['data']['data'])) {
+        if (!isset($response['data'])) {
             throw new Exception('Invalid API response structure');
         }
         
-        $documents = array_map([$this, 'simplifyDocument'], $response['data']['data']);
+        // Handle Outline API response format
+        $documentsData = isset($response['data']['data']) ? $response['data']['data'] : $response['data'];
+        $documents = array_map([$this, 'simplifyDocument'], $documentsData);
         
         echo "📄 Fetched " . count($documents) . " documents from Outline\n";
+        
+        // Debug: Show document IDs for troubleshooting
+        echo "🔍 Document IDs fetched:\n";
+        foreach ($documents as $doc) {
+            echo "   - {$doc['title']}: {$doc['id']} (urlId: {$doc['urlId']})\n";
+        }
         
         return $documents;
     }
@@ -275,13 +287,13 @@ class RemoteSync {
         
         $response = sendHttpRequest('POST', $endpointUrl, $data, $this->headers);
         
-        if (!isset($response['data']['data'])) {
+        if (!isset($response['data'])) {
             echo "🔍 API Response: " . json_encode($response, JSON_PRETTY_PRINT) . "\n";
             throw new Exception('Failed to create document: ' . json_encode($response));
         }
         
-        // Extract the actual document data from the nested response
-        $documentData = $response['data']['data'];
+        // Handle Outline API response format
+        $documentData = isset($response['data']['data']) ? $response['data']['data'] : $response['data'];
         
         return $this->simplifyDocument($documentData);
     }
@@ -302,11 +314,16 @@ class RemoteSync {
         
         $response = sendHttpRequest('POST', $endpointUrl, $data, $this->headers);
         
-        if (!isset($response['data']['data'])) {
+        if (!isset($response['data'])) {
+            echo "🔍 API Response: " . json_encode($response, JSON_PRETTY_PRINT) . "\n";
             throw new Exception('Failed to update document: ' . json_encode($response));
         }
         
-        return $this->simplifyDocument($response['data']['data']);
+        // Handle Outline API response format
+        $documentData = isset($response['data']['data']) ? $response['data']['data'] : $response['data'];
+        
+        echo "✅ Document updated successfully\n";
+        return $this->simplifyDocument($documentData);
     }
     
     /**

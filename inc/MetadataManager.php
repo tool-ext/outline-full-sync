@@ -58,10 +58,14 @@ class MetadataManager {
         $metadata = [
             'last_sync' => date('c'),
             'collection_id' => $this->collectionId,
-            'document_mapping' => $documentMapping
+            'document_mapping' => $documentMapping,
+            'local_files' => array_values($localScan)  // Preserve local files data
         ];
         
-        $this->fileScanner->saveMetadata($localScan, $metadata);
+        // Save the combined metadata directly instead of using saveMetadata
+        $metadataPath = $this->baseFolder . '/.outline';
+        $json = json_encode($metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        file_put_contents($metadataPath, $json);
     }
     
     /**

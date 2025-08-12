@@ -3,7 +3,6 @@
 Bi-directional syncronization between Outline (open source team knowlede sharing wiki) and local folder of simple markdown files. 
 
 ## Why
-
 - TOOL AGNOSTIC: Allows folks to use any markdown editing tool they wish (Obsidian, TextEdit, VSCode) and still share work/research/writing via simple pull and push commands
 - OFFLINE MODE: Enables an offline mode for an entire teams knowledge
 - BACKUPS: Enables easy backups for remote, databased knowledge
@@ -41,3 +40,9 @@ These are all the different sync possibilities to check ...
 - Delete 
   - File
   - Folder
+
+
+
+  ## Ideas
+  - Maybe break thing up so allows for 
+  - Maybe put all settings just into the YAML file instead of having two ... 
