@@ -1,9 +1,9 @@
 <?php
 
-$config = parse_ini_file(__DIR__ . '/config.ini');
+$config = parse_ini_file(__DIR__ . '/config.ini', true);
 
-$token = $config['token'];
-$domain = $config['domain'];
+$token = $config['outline']['token'];
+$domain = $config['outline']['domain'];
 $baseUrl = "https://$domain";
 
 $headers = [
