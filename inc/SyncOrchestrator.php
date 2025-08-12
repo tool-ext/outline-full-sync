@@ -18,6 +18,7 @@ Responsibilities:
 require_once __DIR__ . '/FileSystemScanner.php';
 require_once __DIR__ . '/RemoteSync.php';
 require_once __DIR__ . '/FileOperations.php';
+require_once __DIR__ . '/http.php';
 
 // Include specialized sync components
 require_once __DIR__ . '/CollectionSelector.php';
@@ -42,17 +43,14 @@ class SyncOrchestrator {
     private $parentConversionHandler;
     private $metadataManager;
     
-    public function __construct($collectionId = null, $baseFolder = null) {
-        if ($collectionId && $baseFolder) {
-            // Use provided parameters (multi-collection mode)
-            $this->collectionId = $collectionId;
-            $this->baseFolder = $baseFolder;
-        } else {
-            // Use global config (legacy mode)
-            global $syncConfig;
-            $this->baseFolder = $syncConfig['base_folder'];
-            $this->collectionId = $syncConfig['collection_id'];
+    public function __construct($collectionId, $baseFolder) {
+        // Multi-collection mode - parameters are now required
+        if (!$collectionId || !$baseFolder) {
+            throw new Exception('Collection ID and base folder are required parameters');
         }
+        
+        $this->collectionId = $collectionId;
+        $this->baseFolder = $baseFolder;
         $this->loadConfig();
         $this->initializeComponents();
     }

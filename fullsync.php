@@ -30,9 +30,6 @@ require_once __DIR__ . '/inc/SyncOrchestrator.php';
 
 // Execute the sync if this file is run directly
 if (basename(__FILE__) === basename($_SERVER['PHP_SELF'])) {
-    echo "🔄 Outline Full Sync - Multi-Collection Support\n";
-    echo "═══════════════════════════════════════════════════\n\n";
-    
     // Initialize collection selector
     global $baseUrl, $headers;
     $selector = new CollectionSelector($baseUrl, $headers);
