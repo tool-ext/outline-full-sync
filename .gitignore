@@ -3,3 +3,4 @@
 
 # Configuration files with sensitive data
 init/config.ini
+init/config.yaml

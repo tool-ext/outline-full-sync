@@ -19,7 +19,7 @@ class CollectionSelector {
     public function __construct($baseUrl, $headers) {
         $this->baseUrl = $baseUrl;
         $this->headers = $headers;
-        $this->settingsPath = __DIR__ . '/../init/sync-settings.yaml';
+        $this->settingsPath = __DIR__ . '/../init/config.yaml';
     }
     
     /**
@@ -88,9 +88,9 @@ class CollectionSelector {
      */
     private function loadSyncSettings($collectionId) {
         if (!file_exists($this->settingsPath)) {
-            echo "❌ Error: sync-settings.yaml not found at: {$this->settingsPath}\n";
-            echo "💡 Please create this file with your collection mappings.\n\n";
-            echo "Example sync-settings.yaml:\n";
+            echo "❌ Error: config.yaml not found at: {$this->settingsPath}\n";
+            echo "💡 Please create this file with your configuration.\n\n";
+            echo "Example config.yaml:\n";
             echo "collections:\n";
             echo "  {$collectionId}:\n";
             echo "    name: \"My Collection\"\n";
@@ -104,8 +104,8 @@ class CollectionSelector {
         $settings = $this->parseYaml($yamlContent);
         
         if (!isset($settings['collections'][$collectionId])) {
-            echo "❌ Error: Collection ID '{$collectionId}' not defined in sync-settings.yaml\n";
-            echo "💡 Please add this collection to your sync-settings.yaml file:\n\n";
+            echo "❌ Error: Collection ID '{$collectionId}' not defined in config.yaml\n";
+            echo "💡 Please add this collection to your config.yaml file:\n\n";
             echo "collections:\n";
             echo "  {$collectionId}:\n";
             echo "    name: \"Collection Name\"\n";
@@ -118,7 +118,7 @@ class CollectionSelector {
         
         // Validate required fields
         if (empty($collectionSettings['local_path'])) {
-            echo "❌ Error: 'local_path' not defined for collection {$collectionId} in sync-settings.yaml\n";
+            echo "❌ Error: 'local_path' not defined for collection {$collectionId} in config.yaml\n";
             exit(1);
         }
         

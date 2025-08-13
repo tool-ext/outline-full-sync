@@ -1,0 +1,25 @@
+# Outline Collection Sync Configuration Sample
+# =========================================
+# Copy this file to config.yaml and customize with your settings
+# 
+# IMPORTANT: This file contains sensitive information and should be protected
+# from direct web access. Consider moving it outside your web root.
+
+# API Configuration
+outline:
+  token: "your_outline_api_token_here"
+  domain: "your-outline-domain.com"
+
+# Collection Mappings
+# Maps Outline collection IDs to local folder paths
+# You can get collection IDs by running the sync script and selecting from the list
+collections:
+  # Example collection - replace with your actual collection ID
+  your-collection-id-here:
+    name: "My Collection"
+    local_path: "/path/to/local/folder"
+    
+  # Add more collections as needed
+  # another-collection-id:
+  #   name: "Another Collection"
+  #   local_path: "/path/to/another/folder"
