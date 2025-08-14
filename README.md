@@ -32,9 +32,9 @@ These are all the different sync possibilities to check ...
 
 ### Local
 
-- Create new
-- Rename page
-- Move page
+- Create new Yes
+- Rename page Yes
+- Move page 
   - New folder
   - Different folder
 - Delete 
@@ -43,6 +43,29 @@ These are all the different sync possibilities to check ...
 
 
 
-  ## Ideas
-  - Maybe break thing up so allows for 
-  - Maybe put all settings just into the YAML file instead of having two ... 
+## Configuration
+
+The tool uses a single `config.yaml` file for all settings:
+
+1. **Copy the sample configuration**: `cp init/config-sample.yaml init/config.yaml`
+2. **Edit the configuration**: Update with your Outline API token, domain, and collection mappings
+3. **Protect the file**: The `config.yaml` file contains sensitive information and should not be committed to version control
+
+### Configuration Structure
+
+```yaml
+# API Configuration
+outline:
+  token: "your_outline_api_token_here"
+  domain: "your-outline-domain.com"
+
+# Collection Mappings
+collections:
+  your-collection-id:
+    name: "Collection Name"
+    local_path: "/path/to/local/folder"
+```
+
+## Ideas
+- Maybe break thing up so allows for 
+- ✅ **COMPLETED**: Put all settings just into the YAML file instead of having two separate config files 

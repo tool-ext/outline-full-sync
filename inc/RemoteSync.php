@@ -102,10 +102,18 @@ class RemoteSync {
             'deleted_documents' => []
         ];
         
+        echo "🔍 Detecting remote changes...\n";
+        echo "   Last sync time: $lastSyncTime\n";
+        echo "   Remote documents count: " . count($allDocuments) . "\n";
+        
         // Load previous document mapping
         $previousMapping = $this->loadPreviousDocumentMapping();
         $existingDocIds = array_column($previousMapping, 'id');
         $remoteDocIds = array_column($allDocuments, 'id');
+        
+        echo "   Previous mapping count: " . count($previousMapping) . "\n";
+        echo "   Existing doc IDs: " . implode(', ', $existingDocIds) . "\n";
+        echo "   Remote doc IDs: " . implode(', ', $remoteDocIds) . "\n";
         
         foreach ($allDocuments as $doc) {
             if (!in_array($doc['id'], $existingDocIds)) {
@@ -116,6 +124,8 @@ class RemoteSync {
                 // Updated document
                 $changes['updated_documents'][] = $doc;
                 echo "✏️  Updated document: {$doc['title']}\n";
+            } else {
+                echo "ℹ️  No change for: {$doc['title']}\n";
             }
         }
         
@@ -126,6 +136,11 @@ class RemoteSync {
                 echo "🗑️  Deleted document: {$mapping['title']}\n";
             }
         }
+        
+        echo "📊 Changes summary:\n";
+        echo "   New: " . count($changes['new_documents']) . "\n";
+        echo "   Updated: " . count($changes['updated_documents']) . "\n";
+        echo "   Deleted: " . count($changes['deleted_documents']) . "\n";
         
         return $changes;
     }
@@ -246,16 +261,19 @@ class RemoteSync {
         // Generate final path
         if ($docInfo['is_parent']) {
             // Parent documents become folder/README.md
-            return implode('/', $pathParts) . '/README.md';
+            $path = implode('/', $pathParts) . '/README.md';
         } else {
             // Child documents become folder/filename.md or just filename.md
             $filename = $this->sanitizeFilename($doc['title']) . '.md';
             if (!empty($pathParts)) {
-                return implode('/', $pathParts) . '/' . $filename;
+                $path = implode('/', $pathParts) . '/' . $filename;
             } else {
-                return $filename;
+                $path = $filename;
             }
         }
+        
+        echo "   Generated path for {$doc['title']}: $path\n";
+        return $path;
     }
     
     /**

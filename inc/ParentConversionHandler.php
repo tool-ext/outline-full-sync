@@ -35,8 +35,27 @@ class ParentConversionHandler {
     public function handleParentConversions($hierarchy) {
         echo "🏗️  Checking for parent conversions...\n";
         
+        // Debug: Show hierarchy structure
+        echo "📊 Hierarchy structure:\n";
+        foreach ($hierarchy as $docId => $docInfo) {
+            $title = $docInfo['document']['title'];
+            $isParent = $docInfo['is_parent'] ? 'YES' : 'NO';
+            $childrenCount = count($docInfo['children']);
+            echo "   {$title} (ID: {$docId}): Parent={$isParent}, Children={$childrenCount}\n";
+        }
+        echo "\n";
+        
         $metadata = $this->loadMetadata();
         $currentScan = $this->fileScanner->scanFileSystem();
+        
+        // Debug: Show local scan results
+        echo "📁 Local files found:\n";
+        foreach ($currentScan as $file) {
+            $outlineId = $file['outline_id'] ?? 'NONE';
+            $isReadme = $file['is_readme'] ? 'YES' : 'NO';
+            echo "   {$file['path']}: Outline ID={$outlineId}, README={$isReadme}\n";
+        }
+        echo "\n";
         
         // Handle documents that became parents (file → folder/README.md)
         foreach ($hierarchy as $docId => $docInfo) {
@@ -69,14 +88,38 @@ class ParentConversionHandler {
             $docId = $file['outline_id'];
             
             // Check if this document still has children in the hierarchy
+            // Try to match by both the stored ID and by looking for documents with matching urlId
             $stillHasChildren = false;
+            $matchedDocId = null;
+            
             if (isset($hierarchy[$docId])) {
+                // Direct match by stored ID
+                $matchedDocId = $docId;
                 $stillHasChildren = $hierarchy[$docId]['is_parent'] && !empty($hierarchy[$docId]['children']);
+                echo "🔍 Direct match for {$docId}: is_parent={$hierarchy[$docId]['is_parent']}, children_count=" . count($hierarchy[$docId]['children']) . "\n";
+            } else {
+                // Try to find by urlId match
+                foreach ($hierarchy as $hierarchyDocId => $hierarchyInfo) {
+                    if (isset($hierarchyInfo['document']['urlId']) && $hierarchyInfo['document']['urlId'] === $docId) {
+                        $matchedDocId = $hierarchyDocId;
+                        $stillHasChildren = $hierarchyInfo['is_parent'] && !empty($hierarchyInfo['children']);
+                        echo "🔍 URL ID match for {$docId} → {$hierarchyDocId}: is_parent={$hierarchyInfo['is_parent']}, children_count=" . count($hierarchyInfo['children']) . "\n";
+                        break;
+                    }
+                }
+                
+                if (!$matchedDocId) {
+                    echo "⚠️  Document {$docId} not found in hierarchy - skipping conversion\n";
+                    continue;
+                }
             }
             
             if (!$stillHasChildren) {
                 // This document no longer has children - convert back to standalone file
-                $this->convertToStandaloneFile($file, $hierarchy[$docId]['document'] ?? null);
+                echo "🔄 Document {$docId} no longer has children, converting to standalone file\n";
+                $this->convertToStandaloneFile($file, $hierarchy[$matchedDocId]['document'] ?? null);
+            } else {
+                echo "📁 Document {$docId} still has children, keeping as folder\n";
             }
         }
     }
